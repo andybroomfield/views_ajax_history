@@ -197,7 +197,6 @@
    *   Object containing AJAX options.
    */
   Drupal.ajax.prototype.beforeSubmit = function (form_values, element, options) {
-    console.log(options);
     if (options.data.view_name) {
       var url = original.path + (/\?/.test(original.path) ? '&' : '?') + element.formSerialize();
 
