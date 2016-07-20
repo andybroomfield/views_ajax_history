@@ -1,4 +1,4 @@
-(function ($) {
+(function ($, Drupal, drupalSettings) {
 
   // Need to keep this to check if there are extra parameters in the original URL.
   var original = {
@@ -18,12 +18,12 @@
   var beforeSerialize = Drupal.ajax.prototype.beforeSerialize;
 
   Drupal.behaviors.viewsAjaxHistory = {
-    attach: function (context, settings) {
+    attach: function (context, drupalSettings) {
       // Init the current page too, because the first loaded pager element do
       // not have loadable history and will not work the back button.
       var $body = $('body').once('views-ajax-history-first-page-load');
       if ($body.length) {
-        settings.viewsAjaxHistory.onloadPageItem = settings.viewsAjaxHistory.renderPageItem;
+        drupalSettings.viewsAjaxHistory.onloadPageItem = drupalSettings.viewsAjaxHistory.renderPageItem;
       }
     }
   };
@@ -84,7 +84,7 @@
     var query = [];
 
     // With clean urls off we need to add the 'q' parameter.
-    if (/\?/.test(Drupal.settings.views.ajax_path)) {
+    if (/\?/.test(drupalSettings.views.ajax_path)) {
       query.push('q=' + Drupal.Views.getPath(url));
     }
 
@@ -119,7 +119,7 @@
    */
   var addState = function (options, url) {
     // Store the actual view's dom id.
-    Drupal.settings.viewsAjaxHistory.lastViewDomID = options.data.view_dom_id;
+    drupalSettings.viewsAjaxHistory.lastViewDomID = options.data.view_dom_id;
     $(window).unbind('statechange', loadView);
     History.pushState(options, document.title, cleanURL(url, options.data));
     $(window).bind('statechange', loadView);
@@ -134,13 +134,13 @@
 
     // This should be the first loaded page, so init the options object.
     if (typeof options.data == 'undefined') {
-      var viewsAjaxSettingsKey = 'views_dom_id:' + Drupal.settings.viewsAjaxHistory.lastViewDomID;
-      if (Drupal.settings.views.ajaxViews.hasOwnProperty(viewsAjaxSettingsKey)) {
-        var viewsAjaxSettings = Drupal.settings.views.ajaxViews[viewsAjaxSettingsKey];
-        viewsAjaxSettings.page = Drupal.settings.viewsAjaxHistory.onloadPageItem;
+      var viewsAjaxSettingsKey = 'views_dom_id:' + drupalSettings.viewsAjaxHistory.lastViewDomID;
+      if (drupalSettings.views.ajaxViews.hasOwnProperty(viewsAjaxSettingsKey)) {
+        var viewsAjaxSettings = drupalSettings.views.ajaxViews[viewsAjaxSettingsKey];
+        viewsAjaxSettings.page = drupalSettings.viewsAjaxHistory.onloadPageItem;
         options = {
           data: viewsAjaxSettings,
-          url: Drupal.settings.views.ajax_path
+          url: drupalSettings.views.ajax_path
         };
       }
     }
@@ -175,7 +175,7 @@
       // and we don't need to go trough all this processing.
       if ($($element).hasClass('ajaxHistoryDummy')) {return;}
 
-      options.url = Drupal.settings.views.ajax_path;
+      options.url = drupalSettings.views.ajax_path;
 
       // Check we handle a click on a link, not a form submission.
       if ($element.is('a')) {
@@ -197,6 +197,7 @@
    *   Object containing AJAX options.
    */
   Drupal.ajax.prototype.beforeSubmit = function (form_values, element, options) {
+    console.log(options);
     if (options.data.view_name) {
       var url = original.path + (/\?/.test(original.path) ? '&' : '?') + element.formSerialize();
 
@@ -220,4 +221,5 @@
     // Call the original Drupal method with the right context.
     beforeSubmit.apply(this, arguments);
   };
-}(jQuery));
+
+})(jQuery, Drupal, drupalSettings);
