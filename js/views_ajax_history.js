@@ -10,12 +10,12 @@
   /**
    * Keep the original beforeSubmit method to use it later.
    */
-  var beforeSubmit = Drupal.ajax.prototype.beforeSubmit;
+  var beforeSubmit = Drupal.Ajax.prototype.beforeSubmit;
 
   /**
    * Keep the original beforeSerialize method to use it later.
    */
-  var beforeSerialize = Drupal.ajax.prototype.beforeSerialize;
+  var beforeSerialize = Drupal.Ajax.prototype.beforeSerialize;
 
   Drupal.behaviors.viewsAjaxHistory = {
     attach: function (context, drupalSettings) {
@@ -118,22 +118,29 @@
    *   String with the current URL to be cleaned up.
    */
   var addState = function (options, url) {
+    // The data in the history state must be serializable.
+    var historyOptions = $.extend({}, options)
+    delete historyOptions.beforeSend;
+    delete historyOptions.beforeSerialize;
+    delete historyOptions.beforeSubmit;
+    delete historyOptions.complete;
+    delete historyOptions.success;
+
     // Store the actual view's dom id.
     drupalSettings.viewsAjaxHistory.lastViewDomID = options.data.view_dom_id;
-    $(window).unbind('statechange', loadView);
-    History.pushState(options, document.title, cleanURL(url, options.data));
-    $(window).bind('statechange', loadView);
+    $(window).unbind('popstate', loadView);
+    history.pushState(historyOptions, document.title, cleanURL(url, options.data));
+    $(window).bind('popstate', loadView);
   };
 
   /**
-   * Make an AJAX request to update the view when nagitating back and forth.
+   * Make an AJAX request to update the view when navigating back and forth.
    */
   var loadView = function () {
-    var state = History.getState();
-    var options = state.data;
+    var options;
 
     // This should be the first loaded page, so init the options object.
-    if (typeof options.data == 'undefined') {
+    if (history.state === null) {
       var viewsAjaxSettingsKey = 'views_dom_id:' + drupalSettings.viewsAjaxHistory.lastViewDomID;
       if (drupalSettings.views.ajaxViews.hasOwnProperty(viewsAjaxSettingsKey)) {
         var viewsAjaxSettings = drupalSettings.views.ajaxViews[viewsAjaxSettingsKey];
@@ -144,9 +151,10 @@
         };
       }
     }
+    else {
+      options = history.state;
+    }
 
-    // need a dummy element to trigger Drupal's AJAX call.
-    var $dummy = $('<div class="ajaxHistoryDummy"/>');
     // Drupal's AJAX options.
     var settings = $.extend({
       submit: options.data,
@@ -156,10 +164,9 @@
       progress: { type: 'throbber' }
     }, options);
 
-    new Drupal.ajax(false, $dummy[0], settings);
-    // trigger ajax call
-    // @TODO check there is no leak, $dummy is never destroyed.
-    $dummy.trigger('click');
+    var viewsAjaxSubmit = Drupal.ajax(settings);
+    // Trigger ajax call.
+    viewsAjaxSubmit.execute();
   };
 
   /**
@@ -169,19 +176,12 @@
    *   jQuery DOM element
    * @param options
    */
-  Drupal.ajax.prototype.beforeSerialize = function ($element, options) {
-    if (options.data.view_name) {
-      // If we're restoring a previous state the dummy element will have this class,
-      // and we don't need to go trough all this processing.
-      if ($($element).hasClass('ajaxHistoryDummy')) {return;}
-
-      options.url = drupalSettings.views.ajax_path;
-
-      // Check we handle a click on a link, not a form submission.
-      if ($element.is('a')) {
-        addState(options, $element.attr('href'));
-      }
+  Drupal.Ajax.prototype.beforeSerialize = function ($element, options) {
+    // Check that we handle a click on a link, not a form submission.
+    if (options.data.view_name && $element && $element.is('a')) {
+      addState(options, $element.attr('href'));
     }
+
     // Call the original Drupal method with the right context.
     beforeSerialize.apply(this, arguments);
   };
@@ -196,7 +196,7 @@
    * @param options
    *   Object containing AJAX options.
    */
-  Drupal.ajax.prototype.beforeSubmit = function (form_values, element, options) {
+  Drupal.Ajax.prototype.beforeSubmit = function (form_values, element, options) {
     if (options.data.view_name) {
       var url = original.path + (/\?/.test(original.path) ? '&' : '?') + element.formSerialize();
 
