@@ -17,6 +17,11 @@
    */
   var beforeSerialize = Drupal.Ajax.prototype.beforeSerialize;
 
+  /**
+   * Keep the original beforeSend method to use it later.
+   */
+  var beforeSend = Drupal.Ajax.prototype.beforeSend;
+
   Drupal.behaviors.viewsAjaxHistory = {
     attach: function (context, drupalSettings) {
       // Init the current page too, because the first loaded pager element do
@@ -108,9 +113,9 @@
   };
 
   /**
-   * Unbind 'statechange' when adding a new state to avoid an infinite loop.
+   * Unbind 'popstate' when adding a new state to avoid an infinite loop.
    *
-   * We only use the 'statechange' event to trigger refresh on back of forward click.
+   * We only use the 'popstate' event to trigger refresh on back of forward click.
    *
    * @param options
    *   Object containing the values from views' AJAX call.
@@ -220,5 +225,21 @@
     // Call the original Drupal method with the right context.
     beforeSubmit.apply(this, arguments);
   };
+
+  /**
+   * Override beforeSend to clean up the Ajax submission URL.
+   *
+   * @param {XMLHttpRequest} xmlhttprequest
+   *   Native Ajax object.
+   * @param {object} options
+   *   jQuery.ajax options.
+   */
+  Drupal.Ajax.prototype.beforeSend = function (xmlhttprequest, options) {
+    // Override the URL to not contain any fields that were submitted.
+    options.url = drupalSettings.views.ajax_path + '?' + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
+
+    // Call the original Drupal method with the right context.
+    beforeSend.apply(this, arguments);
+  }
 
 })(jQuery, Drupal, drupalSettings);
