@@ -113,6 +113,21 @@
   };
 
   /**
+   * Parse a URL query string
+   *
+   * @param queryString
+   *   String containing the query to parse.
+   */
+  var parseQuery = function(queryString) {
+    var query = {};
+    $.map(queryString.split('&'), function(val) {
+      var s = val.split('=');
+      query[s[0]] = s[1];
+    });
+    return query;
+  }
+
+  /**
    * Unbind 'popstate' when adding a new state to avoid an infinite loop.
    *
    * We only use the 'popstate' event to trigger refresh on back of forward click.
@@ -235,11 +250,15 @@
    *   jQuery.ajax options.
    */
   Drupal.Ajax.prototype.beforeSend = function (xmlhttprequest, options) {
-    // Override the URL to not contain any fields that were submitted.
-    options.url = drupalSettings.views.ajax_path + '?' + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
+    var data = (typeof options.data === 'string') ? parseQuery(options.data) : {};
 
-    // Call the original Drupal method with the right context.
-    beforeSend.apply(this, arguments);
+    if (data.view_name) {
+      // Override the URL to not contain any fields that were submitted.
+      options.url = drupalSettings.views.ajax_path + '?' + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
+
+      // Call the original Drupal method with the right context.
+      beforeSend.apply(this, arguments);
+    }
   }
 
 })(jQuery, Drupal, drupalSettings);
