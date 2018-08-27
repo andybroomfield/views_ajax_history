@@ -125,7 +125,7 @@
       query[s[0]] = s[1];
     });
     return query;
-  }
+  };
 
   /**
    * Unbind 'popstate' when adding a new state to avoid an infinite loop.
@@ -252,7 +252,7 @@
   Drupal.Ajax.prototype.beforeSend = function (xmlhttprequest, options) {
     var data = (typeof options.data === 'string') ? parseQuery(options.data) : {};
 
-    if (data.view_name) {
+    if (data.view_name && options.type !== 'GET') {
       // Override the URL to not contain any fields that were submitted.
       options.url = drupalSettings.views.ajax_path + '?' + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
 
