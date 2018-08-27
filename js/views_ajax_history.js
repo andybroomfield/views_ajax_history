@@ -2,7 +2,7 @@
 
   // Need to keep this to check if there are extra parameters in the original URL.
   var original = {
-    path: window.location.href,
+    path: window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + window.location.pathname,
     // @TODO integrate #1359798 without breaking history.js
     query: window.location.search || ''
   };
@@ -218,7 +218,8 @@
    */
   Drupal.Ajax.prototype.beforeSubmit = function (form_values, element, options) {
     if (options.data.view_name) {
-      var url = original.path + (/\?/.test(original.path) ? '&' : '?') + element.formSerialize();
+      var url = original.path + '?' + element.formSerialize();
+      var currentQuery = parseQueryString(window.location.href);
 
       // copy selected values in history state
       $.each(form_values, function () {
@@ -233,8 +234,14 @@
         else {
           options.data[this.name] = this.value;
         }
+        // Remove exposed data from the current query to leave behind any
+        // non exposed form related query vars
+        if (currentQuery[this.name]) {
+          delete currentQuery[this.name];
+        }
       });
 
+      url += (/\?/.test(url) ? '&' : '?') + $.param(currentQuery);
       addState(options, url);
     }
     // Call the original Drupal method with the right context.
