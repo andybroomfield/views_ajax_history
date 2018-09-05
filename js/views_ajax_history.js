@@ -1,8 +1,13 @@
+/**
+ * @file
+ * Contains views_ajax_history.js.
+ */
+
 (function ($, Drupal, drupalSettings) {
 
   // Need to keep this to check if there are extra parameters in the original URL.
   var original = {
-    path: window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + window.location.pathname,
+    path: window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '') + window.location.pathname,
     // @TODO integrate #1359798 without breaking history.js
     query: window.location.search || ''
   };
@@ -34,7 +39,7 @@
   };
 
   /**
-   * Modification of Drupal.Views.parseQueryString() to allow extracting multivalues fields
+   * Modification of Drupal.Views.parseQueryString() to allow extracting multivalues fields.
    *
    * @param query
    *   String, either a full url or just the query string.
@@ -47,19 +52,19 @@
     }
     var pairs = query.split('&');
     var pair, key, value;
-    for(var i in pairs) {
+    for (var i in pairs) {
       if (typeof(pairs[i]) == 'string') {
         pair = pairs[i].split('=');
         // Ignore the 'q' path argument, if present.
         if (pair[0] != 'q' && pair[1]) {
           key = decodeURIComponent(pair[0].replace(/\+/g, ' '));
           value = decodeURIComponent(pair[1].replace(/\+/g, ' '));
-          // field name ends with [], it's multivalues
+          // Field name ends with [], it's multivalues.
           if (/\[\]$/.test(key)) {
             if (!(key in args)) {
               args[key] = [value];
             }
-            // don't duplicate values
+            // Don't duplicate values.
             else if (!$.inArray(value, args[key]) !== -1) {
               args[key].push(value);
             }
@@ -74,7 +79,7 @@
   };
 
   /**
-   * Strip views values and duplicates from URL
+   * Strip views values and duplicates from URL.
    *
    * @param url
    *   String with the full URL to clean up.
@@ -94,7 +99,7 @@
     }
 
     $.each(args, function (name, value) {
-      // use values from viewArgs if they exists
+      // Use values from viewArgs if they exists.
       if (name in viewArgs) {
         value = viewArgs[name];
       }
@@ -113,14 +118,14 @@
   };
 
   /**
-   * Parse a URL query string
+   * Parse a URL query string.
    *
    * @param queryString
    *   String containing the query to parse.
    */
-  var parseQuery = function(queryString) {
+  var parseQuery = function (queryString) {
     var query = {};
-    $.map(queryString.split('&'), function(val) {
+    $.map(queryString.split('&'), function (val) {
       var s = val.split('=');
       query[s[0]] = s[1];
     });
@@ -190,7 +195,7 @@
   };
 
   /**
-   * Override beforeSerialize to handle click on pager links
+   * Override beforeSerialize to handle click on pager links.
    *
    * @param $element
    *   jQuery DOM element
@@ -221,21 +226,21 @@
       var url = original.path + '?' + element.formSerialize();
       var currentQuery = parseQueryString(window.location.href);
 
-      // copy selected values in history state
+      // Copy selected values in history state.
       $.each(form_values, function () {
-        // field name ending with [] is a multi value field
+        // Field name ending with [] is a multi value field.
         if (/\[\]$/.test(this.name)) {
           if (!options.data[this.name]) {
             options.data[this.name] = [];
           }
           options.data[this.name].push(this.value);
         }
-        // regular field
+        // Regular field.
         else {
           options.data[this.name] = this.value;
         }
         // Remove exposed data from the current query to leave behind any
-        // non exposed form related query vars
+        // non exposed form related query vars.
         if (currentQuery[this.name]) {
           delete currentQuery[this.name];
         }
