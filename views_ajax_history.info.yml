@@ -4,4 +4,4 @@ description: 'Add bookmarking abilities to AJAX Views.'
 core: 8.x
 package: Views
 dependencies:
-  - views
+  - drupal:views
