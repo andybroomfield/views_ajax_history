@@ -105,11 +105,11 @@
       }
       if ($.isArray(value)) {
         $.merge(query, $.map(value, function (sub) {
-          return name + '=' + sub;
+          return name + '=' + encodeURIComponent(sub);
         }));
       }
       else {
-        query.push(name + '=' + value);
+        query.push(name + '=' + encodeURIComponent(value));
       }
     });
 
