@@ -195,30 +195,7 @@
   };
 
   /**
-   * Check to see if facets are enabled for the view.
-   *
-   * @param viewName string
-   *
-   * return bool
-   *   Whether the view has facets.
-   */
-  var hasFacets = function (viewName) {
-    var hasFacets = false;
-    if (drupalSettings.facets_views_ajax) {
-      // Loop through the facets.
-      $.each(drupalSettings.facets_views_ajax, function (facetId, facetSettings) {
-        if (facetSettings.view_id === viewName) {
-          // Yes, facets are enabled for this view.
-          hasFacets = true;
-        }
-      });
-    }
-
-    return hasFacets;
-  }
-
-  /**
-   * Override beforeSerialize to handle click on pager links
+   * Override beforeSerialize to handle click on pager links.
    *
    * @param $element
    *   jQuery DOM element
@@ -309,15 +286,8 @@
     var data = (typeof options.data === 'string') ? parseQuery(options.data) : {};
 
     if (data.view_name && options.type !== 'GET') {
-      if (hasFacets(data.view_name) === true) {
-        var currentQuery = parseQueryString(window.location.href);
-
-        options.url = drupalSettings.views.ajax_path + '?' + $.param(currentQuery) + "&" + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
-      }
-      else {
-        // Override the URL to not contain any fields that were submitted.
-        options.url = drupalSettings.views.ajax_path + '?' + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
-      }
+      // Override the URL to not contain any fields that were submitted.
+      options.url = drupalSettings.views.ajax_path + '?' + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
 
       // Call the original Drupal method with the right context.
       beforeSend.apply(this, arguments);
