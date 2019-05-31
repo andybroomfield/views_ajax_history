@@ -239,8 +239,10 @@
         else {
           options.data[this.name] = this.value;
         }
-        // Remove exposed data from the current query to leave behind any
-        // non exposed form related query vars.
+      });
+      // Remove exposed data from the current query to leave behind any
+      // non exposed form related query vars.
+      element.find('[name]').each(function () {
         if (currentQuery[this.name]) {
           delete currentQuery[this.name];
         }
