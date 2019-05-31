@@ -226,6 +226,12 @@
       var url = original.path + '?' + element.formSerialize();
       var currentQuery = parseQueryString(window.location.href);
 
+      // Remove the page number from the query string, as a new filter has been
+      // applied and should return new results.
+      if ($.inArray("page", Object.keys(currentQuery)) !== -1) {
+        delete currentQuery.page;
+      }
+
       // Copy selected values in history state.
       $.each(form_values, function () {
         // Field name ending with [] is a multi value field.
