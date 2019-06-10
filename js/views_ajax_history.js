@@ -222,7 +222,7 @@
    *   Object containing AJAX options.
    */
   Drupal.Ajax.prototype.beforeSubmit = function (form_values, element, options) {
-    if (options.data.view_name) {
+    if (options && options.data && options.data.view_name) {
       var url = original.path + '?' + element.formSerialize();
       var currentQuery = parseQueryString(window.location.href);
 
