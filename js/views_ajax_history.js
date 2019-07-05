@@ -113,7 +113,7 @@
       }
     });
 
-    url = url.split('?');
+    url = window.location.href.split('?');
     return url[0] + (query.length ? '?' + query.join('&') : '');
   };
 
@@ -204,7 +204,7 @@
   Drupal.Ajax.prototype.beforeSerialize = function (element, options) {
     // Check that we handle a click on a link, not a form submission.
     if (options.data.view_name && element && $(element).is('a')) {
-      addState(options, window.location.href);
+      addState(options, $(element).attr('href'));
     }
 
     // Call the original Drupal method with the right context.
