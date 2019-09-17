@@ -79,6 +79,32 @@
   };
 
   /**
+   * Returns array with the anchor and the url without anchor.
+   */
+  var extractAnchor = function(url){
+    // Check if there is an anchor
+    var posAnchor = url.indexOf('#');
+
+    var anchor = "";
+    if(posAnchor !== -1) {
+      anchor = url.substring(posAnchor);
+      // Url without anchor.
+      url = url.substring(0, posAnchor  - 1);
+    }
+
+    var result = {
+      url : url,
+      anchor : anchor
+    };
+
+    if(posAnchor !== -1) {
+      result.url = url.substring(0, posAnchor-1);
+    }
+
+    return result;
+  };
+
+  /**
    * Strip views values and duplicates from URL.
    *
    * @param url
@@ -90,8 +116,9 @@
    *   String URL with views values and reduced duplicates.
    */
   var cleanURL = function (url, viewArgs) {
-    var args = parseQueryString(url);
-    var query = [];
+      var anchorExtraction = extractAnchor(url);
+      var args = parseQueryString(anchorExtraction.url);
+      var query = [];
 
     // With clean urls off we need to add the 'q' parameter.
     if (/\?/.test(drupalSettings.views.ajax_path)) {
@@ -113,8 +140,8 @@
       }
     });
 
-    url = window.location.href.split('?');
-    return url[0] + (query.length ? '?' + query.join('&') : '');
+    url = window.location.origin + window.location.pathname;
+    return url + (query.length ? '?' + query.join('&') : '') + anchorExtraction.anchor;
   };
 
   /**
@@ -204,7 +231,7 @@
   Drupal.Ajax.prototype.beforeSerialize = function (element, options) {
     // Check that we handle a click on a link, not a form submission.
     if (options.data.view_name && element && $(element).is('a')) {
-      addState(options, $(element).attr('href'));
+      addState(options, $(element).attr('href') + window.location.hash);
     }
 
     // Call the original Drupal method with the right context.
@@ -224,7 +251,8 @@
   Drupal.Ajax.prototype.beforeSubmit = function (form_values, element, options) {
     if (options && options.data && options.data.view_name) {
       var url = original.path + '?' + element.formSerialize();
-      var currentQuery = parseQueryString(window.location.href);
+      var anchorExtraction = extractAnchor(window.location.href);
+      var currentQuery = parseQueryString(anchorExtraction.url);
 
       // Remove the page number from the query string, as a new filter has been
       // applied and should return new results.
@@ -275,7 +303,7 @@
         }
       });
 
-      url += (/\?/.test(url) ? '&' : '?') + $.param(currentQuery);
+      url += (/\?/.test(url) ? '&' : '?') + $.param(currentQuery) + anchorExtraction.anchor;
       addState(options, url);
     }
     // Call the original Drupal method with the right context.
